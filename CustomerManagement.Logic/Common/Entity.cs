@@ -6,7 +6,7 @@ public abstract class Entity
 {
     public virtual long Id { get; protected internal set; }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         var other = obj as Entity;
 

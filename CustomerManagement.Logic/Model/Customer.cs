@@ -4,48 +4,44 @@ namespace CustomerManagement.Logic.Model;
 
 public class Customer : Entity
 {
-    public virtual string Name { get; protected set; }
-    public virtual string PrimaryEmail { get; protected set; }
-    public virtual string SecondaryEmail { get; protected set; }
-    public virtual Industry Industry { get; set; }
-    public virtual EmailCampaignType EmailCampaignType { get; protected set; }
-    public virtual CustomerStatus Status { get; protected set; }
+    public virtual Name Name { get; protected set; }
+    public virtual Email PrimaryEmail { get; protected set; }
+    public virtual Email SecondaryEmail { get; protected set; }
     
-    protected Customer() { }
+    public long IndustryId { get; }
+    public virtual Industry Industry { get; set; }
+    
+    public virtual EmailSettings Settings { get; protected set; }
+    public virtual CustomerStatus Status { get; protected set; }
 
-    public Customer(string name, string primaryEmail, string secondaryEmail, Industry industry) : this()
+    
+    private Customer() { }
+
+    public Customer(Name name, Email primaryEmail, Email secondaryEmail, Industry industry) : this()
     {
+        if (name == null)
+            throw new ArgumentNullException(nameof(name));
+        if (primaryEmail == null)
+            throw new ArgumentNullException(nameof(primaryEmail));
+        if (secondaryEmail == null)
+            throw new ArgumentNullException(nameof(secondaryEmail));
+        
         Name = name;
         PrimaryEmail = primaryEmail;
         SecondaryEmail = secondaryEmail;
         Industry = industry;
-        EmailCampaignType = GetEmailCampaign(industry);
+        Settings = new EmailSettings(industry, false);
         Status = CustomerStatus.Regular;
-    }
-
-    private EmailCampaignType GetEmailCampaign(Industry industry)
-    {
-        if (industry.Name == Industry.CarsIndustry)
-            return EmailCampaignType.LatestCarModels;
-
-        if (industry.Name == Industry.PharmacyIndustry)
-            return EmailCampaignType.PharmacyNews;
-
-        return EmailCampaignType.Generic;
     }
 
     public virtual void DisableEmailing()
     {
-        EmailCampaignType = EmailCampaignType.None;
+        Settings = new EmailSettings(Settings.Industry, true);
     }
 
     public virtual void UpdateIndustry(Industry industry)
     {
-        if (EmailCampaignType == EmailCampaignType.None)
-            return;
-
-        EmailCampaignType = GetEmailCampaign(industry);
-        Industry = industry;
+        Settings = new EmailSettings(industry, Settings.EmailingIsDisabled);
     }
 
     public virtual bool CanBePromoted()
@@ -55,14 +51,16 @@ public class Customer : Entity
 
     public virtual void Promote()
     {
-        if (Status == CustomerStatus.Regular)
+        if (!CanBePromoted())
+            throw new InvalidOperationException();
+
+        Status = Status switch
         {
-            Status = CustomerStatus.Preferred;
-        }
-        else
-        {
-            Status = CustomerStatus.Gold;
-        }
+            CustomerStatus.Regular => CustomerStatus.Preferred,
+            CustomerStatus.Preferred => CustomerStatus.Gold,
+            CustomerStatus.Gold => throw new InvalidOperationException(),
+            _ => throw new InvalidOperationException()
+        };
     }
 
     public override string ToString()

@@ -1,6 +1,8 @@
-﻿namespace CustomerManagement.Logic.Model;
+﻿using CustomerManagement.Logic.Common;
+
+namespace CustomerManagement.Logic.Model;
 
 public interface IEmailGateway
 {
-    bool SendPromotionNotification(string email, CustomerStatus newStatus);
+    Result SendPromotionNotification(string email, CustomerStatus newStatus);
 }

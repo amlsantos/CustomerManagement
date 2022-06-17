@@ -26,6 +26,6 @@ public class CustomerRepository : IRepository<Customer>
 
     public async Task<Customer?> GetByNameAsync(string name)
     {
-        return await _context.Customers.FirstOrDefaultAsync(c => c.Name.Contains(name));
+        return await _context.Customers.FirstOrDefaultAsync(c => c.Name.Value.Contains(name));
     }
 }

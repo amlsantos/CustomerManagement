@@ -1,15 +1,16 @@
 ﻿using System.Net.Mail;
+using CustomerManagement.Logic.Common;
 
 namespace CustomerManagement.Logic.Model;
 
 public class EmailGateway : IEmailGateway
 {
-    public bool SendPromotionNotification(string email, CustomerStatus newStatus)
+    public Result SendPromotionNotification(string email, CustomerStatus newStatus)
     {
         return TrySendEmail(email, "Congratulations!", "You've been promoted to " + newStatus);
     }
 
-    private bool TrySendEmail(string to, string subject, string body)
+    private Result TrySendEmail(string to, string subject, string body)
     {
         var message = new MailMessage("noreply@northwind.com", to, subject, body);
         var client = new SmtpClient();
@@ -18,11 +19,11 @@ public class EmailGateway : IEmailGateway
         {
             client.Send(message);
 
-            return true;
+            return Result.Ok();
         }
         catch (Exception e)
         {
-            return false;
+            return Result.Fail("Unable to send email");
         }
     }
 }

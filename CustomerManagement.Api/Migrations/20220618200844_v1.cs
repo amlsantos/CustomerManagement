@@ -33,7 +33,6 @@ namespace CustomerManagement.Api.Migrations
                     PrimaryEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SecondaryEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IndustryId = table.Column<long>(type: "bigint", nullable: false),
-                    EmailCampaignType = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

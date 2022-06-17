@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CustomerManagement.Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220617083650_v1")]
+    [Migration("20220618200844_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -32,11 +32,9 @@ namespace CustomerManagement.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
 
-                    b.Property<int>("EmailCampaignType")
-                        .HasColumnType("int");
-
                     b.Property<long>("IndustryId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("IndustryId");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -85,7 +83,23 @@ namespace CustomerManagement.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("CustomerManagement.Logic.Model.EmailSettings", "Settings", b1 =>
+                        {
+                            b1.Property<long>("CustomerId")
+                                .HasColumnType("bigint");
+
+                            b1.HasKey("CustomerId");
+
+                            b1.ToTable("Customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CustomerId");
+                        });
+
                     b.Navigation("Industry");
+
+                    b.Navigation("Settings")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

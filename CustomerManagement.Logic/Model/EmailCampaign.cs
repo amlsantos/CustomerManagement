@@ -1,6 +1,6 @@
 ﻿namespace CustomerManagement.Logic.Model;
 
-public enum EmailCampaignType
+public enum EmailCampaign
 {
     None,
     LatestCarModels,

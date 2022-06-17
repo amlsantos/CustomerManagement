@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using CustomerManagement.Api.Controllers.Common;
+﻿using CustomerManagement.Api.Controllers.Common;
 using CustomerManagement.Api.DAL;
 using CustomerManagement.Api.Models;
 using CustomerManagement.Logic.Model;
@@ -28,51 +27,29 @@ public class CustomerController : BaseController
     [HttpPost]
     public async Task<IActionResult> Create(CreateCustomerModel model)
     {
-        var nameError = ValidateName(model.Name);
-        if (!string.IsNullOrEmpty(nameError))
-            return Error(nameError);
+        var customerName = Name.Create(model.Name);
+        if (customerName.IsFailure)
+            return Error(customerName.Error);
 
-        var emailError = ValidateEmail(model.PrimaryEmail, "Primary email");
-        if (!string.IsNullOrEmpty(emailError))
-            return Error(emailError);
+        var primaryEmail = Email.Create(model.PrimaryEmail);
+        if (primaryEmail.IsFailure)
+            return Error(primaryEmail.Error);
 
         if (model.SecondaryEmail != null)
         {
-            emailError = ValidateEmail(model.SecondaryEmail, "Secondary email");
-            if (!string.IsNullOrEmpty(emailError))
-                return Error(emailError);
+            var secondaryEmail = Email.Create(model.SecondaryEmail);
+            if (secondaryEmail.IsFailure)
+                return Error(secondaryEmail.Error);
         }
 
         var industry = await _industryRepository.GetByNameAsync(model.Industry);
         if (industry == null)
             return Error($"Industry name is invalid: {model.Industry}");
 
-        var customer = new Customer(model.Name, model.PrimaryEmail, model.SecondaryEmail, industry);
+        var customer = new Customer(customerName.Value, primaryEmail.Value, Email.Create(model.SecondaryEmail).Value, industry);
         await _customerRepository.AddAsync(customer);
 
         return await Success(customer);
-    }
-
-    private string ValidateName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            return "Customer name should not be empty";
-        if (name.Length > 200)
-            return "Customer name is too long";
-
-        return string.Empty;
-    }
-
-    private string ValidateEmail(string email, string fieldName)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return fieldName + " should not be empty";
-        if (email.Length > 256)
-            return fieldName + " is too long";
-        if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
-            return fieldName + " is invalid";
-
-        return string.Empty;
     }
 
     [HttpGet]
@@ -82,6 +59,9 @@ public class CustomerController : BaseController
         var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return Error("Customer with such Id is not found: " + id);
+        
+        var industry = await _industryRepository.GetByIdAsync(customer.IndustryId);
+        customer.UpdateIndustry(industry);
 
         return await Success(customer);
     }
@@ -111,6 +91,10 @@ public class CustomerController : BaseController
         if (customer == null)
             return Error("Customer with such Id is not found: " + id);
 
+        var industry = await _industryRepository.GetByIdAsync(customer.IndustryId);
+        if (industry != null)
+            customer.Industry = industry;
+            
         customer.DisableEmailing();
         
         return await Success(customer);
@@ -130,7 +114,7 @@ public class CustomerController : BaseController
         customer.Promote();
         
         var emailSent = _emailGateway.SendPromotionNotification(customer.PrimaryEmail, customer.Status);
-        if (!emailSent)
+        if (emailSent.IsFailure)
             return Error("Unable to sent notification email");
 
         return await Success(customer);
