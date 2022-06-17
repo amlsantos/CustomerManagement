@@ -7,10 +7,7 @@ public class CustomerRepository : IRepository<Customer>
 {
     private readonly DataContext _context;
 
-    public CustomerRepository(DataContext context)
-    {
-        _context = context;
-    }
+    public CustomerRepository(DataContext context) => _context = context;
 
     public async Task<Customer?> GetByIdAsync(long id)
     {
@@ -20,7 +17,6 @@ public class CustomerRepository : IRepository<Customer>
     public async Task AddAsync(Customer customer)
     {
         await _context.Customers.AddAsync(customer);
-        await _context.SaveChangesAsync();
     }
 
     public async Task CommitAsync()

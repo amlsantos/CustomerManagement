@@ -20,7 +20,6 @@ public class IndustryRepository : IRepository<Industry>
     public async Task AddAsync(Industry entity)
     {
         await _context.Industries.AddAsync(entity);
-        await _context.SaveChangesAsync();
     }
 
     public async Task CommitAsync()

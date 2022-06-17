@@ -1,6 +1,8 @@
 using CustomerManagement.Api.DAL;
+using CustomerManagement.Api.Utils;
 using CustomerManagement.Logic.Model;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace CustomerManagement.Api;
 
@@ -10,12 +12,13 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder();
         var services = builder.Services;
-        
+
+        ConfigSerilog(builder);
         ConfigureServices(services);
         ConfigureDI(services);
 
         var app = builder.Build();
-        
+
         RunMigrations(app);
         ConfigureApp(app);
         
@@ -47,6 +50,19 @@ public static class Program
         services.AddScoped<IRepository<Industry>, IndustryRepository>();
     }
 
+    private static void ConfigSerilog(WebApplicationBuilder builder)
+    {
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .Enrich.FromLogContext()
+            .CreateLogger();
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddSerilog(logger);
+        
+        logger.Debug("sssssssssssssss");
+    }
+
     private static void RunMigrations(WebApplication app)
     {
         using var scope = app.Services.CreateScope();
@@ -62,7 +78,8 @@ public static class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-        
+
+        app.UseMiddleware<ExceptionMiddleware>();
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();

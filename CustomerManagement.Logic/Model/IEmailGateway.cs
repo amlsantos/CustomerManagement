@@ -2,5 +2,5 @@
 
 public interface IEmailGateway
 {
-    void SendPromotionNotification(string email, CustomerStatus newStatus);
+    bool SendPromotionNotification(string email, CustomerStatus newStatus);
 }
