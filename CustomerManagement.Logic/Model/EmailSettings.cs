@@ -1,52 +1,45 @@
 ﻿using System.ComponentModel;
 using CustomerManagement.Logic.Common;
-using System;
 
 namespace CustomerManagement.Logic.Model;
 
-public class EmailSettings : ValueObject<EmailSettings>
+public class EmailSettings : Entity
 {
-    public virtual Industry Industry { get; }
-    public virtual bool EmailingIsDisabled { get; }
+    public virtual bool IsDisabled { get; protected set; }
+    public virtual Industry Industry { get; protected set; }
     public virtual EmailCampaign EmailCampaign => GetEmailCampaign(Industry);
 
     private EmailSettings() { }
-    
-    public EmailSettings(Industry industry, bool emailingIsDisabled) : this()
+    public EmailSettings(Industry industry, bool isDisabled) : this()
     {
         Industry = industry;
-        EmailingIsDisabled = emailingIsDisabled;
-    }
-    
-    protected override bool EqualsCore(EmailSettings other)
-    {
-        return Industry == other.Industry && EmailingIsDisabled == other.EmailingIsDisabled;
+        IsDisabled = isDisabled;
     }
 
-    protected override int GetHashCodeCore()
+    private EmailCampaign GetEmailCampaign(Industry industry)
     {
-        unchecked
-        {
-            var hashCode = Industry.GetHashCode();
-            hashCode = (hashCode * 397) ^ EmailingIsDisabled.GetHashCode();
-            return hashCode;
-        }
-    }
-    
-    private EmailCampaign GetEmailCampaign(Industry? industry)
-    {
-        if (industry ==null || EmailingIsDisabled)
+        if (IsDisabled)
             return EmailCampaign.None;
         
-        if (industry.Name == Industry.CarsIndustry)
+        if (industry == Industry.Cars)
             return EmailCampaign.LatestCarModels;
 
-        if (industry.Name == Industry.PharmacyIndustry)
+        if (industry == Industry.Pharmacy)
             return EmailCampaign.PharmacyNews;
 
-        if (industry.Name == Industry.OtherIndustry)
+        if (industry == Industry.Other)
             return EmailCampaign.Generic;
 
         throw new InvalidEnumArgumentException();
+    }
+    
+    public virtual void DisableEmailing()
+    {
+        IsDisabled = false;
+    }
+
+    public virtual void UpdateIndustry(Industry industry)
+    {
+        Industry = industry;
     }
 }

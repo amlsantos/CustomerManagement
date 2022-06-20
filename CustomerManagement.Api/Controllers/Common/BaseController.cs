@@ -7,18 +7,15 @@ namespace CustomerManagement.Api.Controllers.Common;
 public class BaseController : ControllerBase
 {
     private readonly IRepository<Customer> _customerRepository;
-    private readonly IRepository<Industry> _industryRepository;
 
-    public BaseController(IRepository<Customer> customerRepository, IRepository<Industry> industryRepository)
+    public BaseController(IRepository<Customer> customerRepository)
     {
         _customerRepository = customerRepository;
-        _industryRepository = industryRepository;
     }
 
     protected async Task<IActionResult> Success(object? o)
     {
         await _customerRepository.CommitAsync();
-        await _industryRepository.CommitAsync();
         
         return Ok(o);
     }

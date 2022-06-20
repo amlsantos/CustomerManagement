@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
 using CustomerManagement.Api.DAL;
 using CustomerManagement.Api.Utils;
 using CustomerManagement.Logic.Model;
 using Microsoft.EntityFrameworkCore;
+using NullGuard;
 
+// [assembly: NullGuard(ValidationFlags.All)]
 namespace CustomerManagement.Api;
 
 public static class Program
@@ -35,7 +38,7 @@ public static class Program
                 }
             );
         });
-        services.AddControllers();
+        services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }
@@ -44,15 +47,14 @@ public static class Program
     {
         services.AddScoped<IEmailGateway, EmailGateway>();
         services.AddScoped<IRepository<Customer>, CustomerRepository>();
-        services.AddScoped<IRepository<Industry>, IndustryRepository>();
     }
 
     private static void RunMigrations(WebApplication app)
     {
         using var scope = app.Services.CreateScope();
-        var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var context = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-        dataContext.Database.Migrate();
+        context.Database.Migrate();
     }
 
     private static void ConfigureApp(WebApplication app)

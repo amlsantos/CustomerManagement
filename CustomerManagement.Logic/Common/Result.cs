@@ -1,4 +1,6 @@
-﻿namespace CustomerManagement.Logic.Common;
+﻿using NullGuard;
+
+namespace CustomerManagement.Logic.Common;
 
 public class Result
 {
@@ -56,7 +58,7 @@ public class Result<T> : Result
         }
     }
 
-    protected internal Result(T value, bool isSuccess, string error) : base(isSuccess, error)
+    protected internal Result(T? value, bool isSuccess, string error) : base(isSuccess, error)
     {
         _value = value;
     }

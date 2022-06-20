@@ -4,44 +4,49 @@ namespace CustomerManagement.Logic.Model;
 
 public class Customer : Entity
 {
-    public virtual Name Name { get; protected set; }
-    public virtual Email PrimaryEmail { get; protected set; }
-    public virtual Email SecondaryEmail { get; protected set; }
-    
-    public long IndustryId { get; }
-    public virtual Industry Industry { get; set; }
-    
-    public virtual EmailSettings Settings { get; protected set; }
+    private string _name;
+    private string _primaryEmail;
+    private string _secondaryEmail;
+
+    public virtual Name Name
+    {
+        get => (Name)_name;
+        protected init => _name = value;
+    }
+
+    public virtual Email PrimaryEmail
+    {
+        get => (Email)_primaryEmail;
+        protected init => _primaryEmail = value;
+    }
+
+    public virtual Maybe<Email> SecondaryEmail
+    {
+        get => (Email)_secondaryEmail;
+        protected init => _secondaryEmail = value.Unwrap();
+    }
+    public virtual EmailSettings EmailingSettings { get; protected set; }
     public virtual CustomerStatus Status { get; protected set; }
 
-    
     private Customer() { }
-
-    public Customer(Name name, Email primaryEmail, Email secondaryEmail, Industry industry) : this()
+    
+    public Customer(Name name, Email primaryEmail, Maybe<Email> secondaryEmail, Industry industry) : this()
     {
-        if (name == null)
-            throw new ArgumentNullException(nameof(name));
-        if (primaryEmail == null)
-            throw new ArgumentNullException(nameof(primaryEmail));
-        if (secondaryEmail == null)
-            throw new ArgumentNullException(nameof(secondaryEmail));
-        
         Name = name;
         PrimaryEmail = primaryEmail;
         SecondaryEmail = secondaryEmail;
-        Industry = industry;
-        Settings = new EmailSettings(industry, false);
+        EmailingSettings = new EmailSettings(industry, true);
         Status = CustomerStatus.Regular;
     }
 
     public virtual void DisableEmailing()
     {
-        Settings = new EmailSettings(Settings.Industry, true);
+        EmailingSettings.DisableEmailing();
     }
-
+    
     public virtual void UpdateIndustry(Industry industry)
     {
-        Settings = new EmailSettings(industry, Settings.EmailingIsDisabled);
+        EmailingSettings.UpdateIndustry(industry);
     }
 
     public virtual bool CanBePromoted()
@@ -61,10 +66,5 @@ public class Customer : Entity
             CustomerStatus.Gold => throw new InvalidOperationException(),
             _ => throw new InvalidOperationException()
         };
-    }
-
-    public override string ToString()
-    {
-        return $"Id:{Id}, Name:{Name}, PrimaryEmail:{PrimaryEmail}, Industry:{Industry}";
     }
 }

@@ -29,10 +29,6 @@ namespace CustomerManagement.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
 
-                    b.Property<long>("IndustryId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("IndustryId");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -50,40 +46,21 @@ namespace CustomerManagement.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IndustryId");
-
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("CustomerManagement.Logic.Model.Industry", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Industries");
                 });
 
             modelBuilder.Entity("CustomerManagement.Logic.Model.Customer", b =>
                 {
-                    b.HasOne("CustomerManagement.Logic.Model.Industry", "Industry")
-                        .WithMany()
-                        .HasForeignKey("IndustryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("CustomerManagement.Logic.Model.EmailSettings", "Settings", b1 =>
+                    b.OwnsOne("CustomerManagement.Logic.Model.EmailSettings", "EmailingSettings", b1 =>
                         {
                             b1.Property<long>("CustomerId")
                                 .HasColumnType("bigint");
+
+                            b1.Property<long>("Id")
+                                .HasColumnType("bigint");
+
+                            b1.Property<bool>("IsDisabled")
+                                .HasColumnType("bit");
 
                             b1.HasKey("CustomerId");
 
@@ -91,11 +68,32 @@ namespace CustomerManagement.Api.Migrations
 
                             b1.WithOwner()
                                 .HasForeignKey("CustomerId");
+
+                            b1.OwnsOne("CustomerManagement.Logic.Model.Industry", "Industry", b2 =>
+                                {
+                                    b2.Property<long>("EmailSettingsCustomerId")
+                                        .HasColumnType("bigint");
+
+                                    b2.Property<long>("Id")
+                                        .HasColumnType("bigint");
+
+                                    b2.Property<string>("Name")
+                                        .IsRequired()
+                                        .HasColumnType("nvarchar(max)");
+
+                                    b2.HasKey("EmailSettingsCustomerId");
+
+                                    b2.ToTable("Customers");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("EmailSettingsCustomerId");
+                                });
+
+                            b1.Navigation("Industry")
+                                .IsRequired();
                         });
 
-                    b.Navigation("Industry");
-
-                    b.Navigation("Settings")
+                    b.Navigation("EmailingSettings")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

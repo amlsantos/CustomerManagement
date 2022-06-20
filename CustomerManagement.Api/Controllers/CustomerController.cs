@@ -1,6 +1,7 @@
 ﻿using CustomerManagement.Api.Controllers.Common;
 using CustomerManagement.Api.DAL;
 using CustomerManagement.Api.Models;
+using CustomerManagement.Logic.Common;
 using CustomerManagement.Logic.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,16 +13,14 @@ public class CustomerController : BaseController
 {
     private readonly IEmailGateway _emailGateway;
     private readonly IRepository<Customer> _customerRepository;
-    private readonly IRepository<Industry> _industryRepository;
 
     public CustomerController(
         IEmailGateway emailGateway,
-        IRepository<Customer> customerRepository,
-        IRepository<Industry> industryRepository) : base(customerRepository, industryRepository)
+        IRepository<Customer> customerRepository) 
+        : base(customerRepository)
     {
         _emailGateway = emailGateway;
         _customerRepository = customerRepository;
-        _industryRepository = industryRepository;
     }
 
     [HttpPost]
@@ -35,88 +34,156 @@ public class CustomerController : BaseController
         if (primaryEmail.IsFailure)
             return Error(primaryEmail.Error);
 
-        if (model.SecondaryEmail != null)
-        {
-            var secondaryEmail = Email.Create(model.SecondaryEmail);
-            if (secondaryEmail.IsFailure)
-                return Error(secondaryEmail.Error);
-        }
-
-        var industry = await _industryRepository.GetByNameAsync(model.Industry);
-        if (industry == null)
+        var secondaryEmailResult = GetSecondaryEmail(model.SecondaryEmail);
+        var industryOrNothing = Industry.Get(model.Industry);
+        if (industryOrNothing.IsFailure)
             return Error($"Industry name is invalid: {model.Industry}");
 
-        var customer = new Customer(customerName.Value, primaryEmail.Value, Email.Create(model.SecondaryEmail).Value, industry);
-        await _customerRepository.AddAsync(customer);
+        var customer = new Customer(
+            customerName.Value, 
+            primaryEmail.Value, 
+            Email.Create(model.SecondaryEmail).Value, 
+            industryOrNothing.Value);
+        
+        await _customerRepository.AdAsync(customer);
+        await _customerRepository.CommitAsync();
+        
+        var dto = new
+        {
+            Id = customer.Id,
+            Name = customer.Name.Value,
+            PrimaryEmail = customer.PrimaryEmail.Value,
+            SecondaryEmail = customer.SecondaryEmail.Value.Value,
+            Industry = industryOrNothing.Value.Name,
+            Settings = new
+            {
+                IsDisabled = customer.EmailingSettings.IsDisabled,
+                Industry = customer.EmailingSettings.Industry
+            },
+            Status = customer.Status
+        };
 
-        return await Success(customer);
+        return Ok(dto);
+    }
+
+    private Result<Maybe<Email>> GetSecondaryEmail(string value)
+    {
+        if (value == null)
+            return Result.Ok<Maybe<Email>>(null);
+
+        var email = Email.Create(value);
+        if (email.IsSuccess)
+            return Result.Ok<Maybe<Email>>(email.Value);
+        
+        return Result.Fail<Maybe<Email>>(email.Error);
     }
 
     [HttpGet]
     [Route("{id}")]
     public async Task<IActionResult> Get(long id)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        var customerOrNothing = await _customerRepository.GetByIdAsync(id);
+        if (customerOrNothing.HasNoValue)
             return Error("Customer with such Id is not found: " + id);
-        
-        var industry = await _industryRepository.GetByIdAsync(customer.IndustryId);
-        customer.UpdateIndustry(industry);
 
-        return await Success(customer);
+        var customer = customerOrNothing.Value;
+        
+        var dto = new
+        {
+            Id = customer.Id,
+            Name = customer.PrimaryEmail.Value,
+            PrimaryEmail = customer.PrimaryEmail.Value,
+            SecondaryEmail = customer.SecondaryEmail.Value.Value,
+            Settings = new
+            {
+                IsDisabled = customer.EmailingSettings.IsDisabled,
+                Industry = customer.EmailingSettings.Industry
+            },
+            Status = customer.Status
+        };
+            
+        return await Success(dto);
     }
 
     [HttpPut]
     [Route("{id}")]
     public async Task<IActionResult> Update(int id, UpdateCustomerModel model)
     {
-        var customer = await _customerRepository.GetByIdAsync(model.Id);
-        if (customer == null)
-            return Error("Customer with such Id is not found: " + model.Id);
-
-        var industry = await _industryRepository.GetByNameAsync(model.Industry);
-        if (industry == null)
+        var customerOrNothing = await _customerRepository.GetByIdAsync(id);
+        if (customerOrNothing.HasNoValue)
+            return Error("Customer with such Id is not found: " + id);
+    
+        var industryResult = Industry.Get(model.Industry);
+        if (industryResult.IsFailure)
             return Error("Industry name is invalid: " + model.Industry);
 
+        var customer = customerOrNothing.Value;
+        var industry = industryResult.Value;
         customer.UpdateIndustry(industry);
-        
-        return await Success(customer);
-    }
 
+        var dto = new
+        {
+            Id = customer.Id,
+            Name = customer.PrimaryEmail.Value,
+            PrimaryEmail = customer.PrimaryEmail.Value,
+            SecondaryEmail = customer.SecondaryEmail.Value.Value,
+            Settings = new
+            {
+                IsDisabled = customer.EmailingSettings.IsDisabled,
+                Industry = customer.EmailingSettings.Industry
+            },
+            Status = customer.Status
+        };
+        
+        return await Success(dto);
+    }
+    
     [HttpDelete]
     [Route("{id}/emailing")]
     public async Task<IActionResult> DisableEmailing(long id)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        var customerOrNothing = await _customerRepository.GetByIdAsync(id);
+        if (customerOrNothing.HasNoValue)
             return Error("Customer with such Id is not found: " + id);
 
-        var industry = await _industryRepository.GetByIdAsync(customer.IndustryId);
-        if (industry != null)
-            customer.Industry = industry;
-            
+        var customer = customerOrNothing.Value;
         customer.DisableEmailing();
         
-        return await Success(customer);
+        var dto = new
+        {
+            Id = customer.Id,
+            Name = customer.PrimaryEmail.Value,
+            PrimaryEmail = customer.PrimaryEmail.Value,
+            SecondaryEmail = customer.SecondaryEmail.Value.Value,
+            Settings = new
+            {
+                IsDisabled = customer.EmailingSettings.IsDisabled,
+                Industry = customer.EmailingSettings.Industry
+            },
+            Status = customer.Status
+        };
+        
+        return await Success(dto);
     }
-
+    
     [HttpPost]
     [Route("{id}/promotion")]
     public async Task<IActionResult> Promote(long id)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        var customerOrNothing = await _customerRepository.GetByIdAsync(id);
+        if (customerOrNothing.HasNoValue)
             return Error("Customer with such Id is not found: " + id);
-
-        if (!customer.CanBePromoted())
+    
+        if (!customerOrNothing.Value.CanBePromoted())
             return Error("The customer has the highest status possible");
-
+    
+        var customer = customerOrNothing.Value;
         customer.Promote();
         
         var emailSent = _emailGateway.SendPromotionNotification(customer.PrimaryEmail, customer.Status);
         if (emailSent.IsFailure)
             return Error("Unable to sent notification email");
-
-        return await Success(customer);
+    
+        return await Success(customerOrNothing.Value);
     }
 }

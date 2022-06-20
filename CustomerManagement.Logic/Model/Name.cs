@@ -7,20 +7,22 @@ public class Name : ValueObject<Name>
 {
     public string Value { get; }
     private Name(string value) => Value = value;
-    public static Result<Name> Create(string value)
+    public static Result<Name> Create(Maybe<string> name)
     {
-        value = value.Trim();
-        
-        if (string.IsNullOrEmpty(value))
+        if (name.HasNoValue)
             return Result.Fail<Name>("Customer name should not be empty");
         
-        if (string.IsNullOrWhiteSpace(value))
+        var customerName = name.Value.Trim();
+        if (string.IsNullOrEmpty(customerName))
+            return Result.Fail<Name>("Customer name should not be empty");
+        
+        if (string.IsNullOrWhiteSpace(customerName))
             return Result.Fail<Name>("Customer name should not be empty");
 
-        if (value.Length > 200)
+        if (customerName.Length > 200)
             return Result.Fail<Name>("Customer name is too long");
         
-        return Result.Ok(new Name(value));
+        return Result.Ok(new Name(customerName));
     }
 
     protected override bool EqualsCore(Name other)

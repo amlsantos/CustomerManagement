@@ -8,20 +8,22 @@ public class Email : ValueObject<Email>
 {
     public string Value { get; }
     private Email(string value) => Value = value;
-    public static Result<Email> Create(string value)
+    public static Result<Email> Create(Maybe<string> value)
     {
-        value = value.Trim();
-        
-        if (string.IsNullOrEmpty(value))
+        if (value.HasNoValue)
             return Result.Fail<Email>("Email should not be empty");
         
-        if (value.Length > 256)
+        var email = value.Value.Trim();
+        if (string.IsNullOrEmpty(email))
+            return Result.Fail<Email>("Email should not be empty");
+        
+        if (email.Length > 256)
             return Result.Fail<Email>("Email is too long");
         
-        if (!Regex.IsMatch(value, @"^(.+)@(.+)$"))
+        if (!Regex.IsMatch(email, @"^(.+)@(.+)$"))
             return Result.Fail<Email>("Email is invalid");
 
-        return Result.Ok(new Email(value));
+        return Result.Ok(new Email(email));
     }
 
     protected override bool EqualsCore(Email other)
