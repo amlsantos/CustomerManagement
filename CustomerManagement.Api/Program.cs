@@ -8,11 +8,11 @@ using NullGuard;
 [assembly: NullGuard(ValidationFlags.All)]
 namespace CustomerManagement.Api;
 
-public static class Program
+public partial class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder();
+        var builder = WebApplication.CreateBuilder(args);
         
         var services = builder.Services;
         ConfigureServices(services);
