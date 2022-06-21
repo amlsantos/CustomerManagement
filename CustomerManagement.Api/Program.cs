@@ -5,7 +5,7 @@ using CustomerManagement.Logic.Model;
 using Microsoft.EntityFrameworkCore;
 using NullGuard;
 
-// [assembly: NullGuard(ValidationFlags.All)]
+[assembly: NullGuard(ValidationFlags.All)]
 namespace CustomerManagement.Api;
 
 public static class Program
@@ -38,7 +38,8 @@ public static class Program
                 }
             );
         });
-        services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+        services.AddControllers()
+            .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }

@@ -2,8 +2,8 @@
 
 public class CreateCustomerModel
 {
-    public string? Name { get; set; }
-    public string? PrimaryEmail { get; set; }
-    public string? SecondaryEmail { get; set; }
-    public string? Industry { get; set; }
+    public string? Name { get; init; }
+    public string? PrimaryEmail { get; init; }
+    public string? SecondaryEmail { get; init; }
+    public string? Industry { get; init; }
 }

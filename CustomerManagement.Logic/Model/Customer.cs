@@ -26,7 +26,7 @@ public class Customer : Entity
         protected init => _secondaryEmail = value.Unwrap();
     }
     public virtual EmailSettings EmailingSettings { get; protected set; }
-    public virtual CustomerStatus Status { get; protected set; }
+    public virtual CustomerType Type { get; protected set; }
 
     private Customer() { }
     
@@ -35,8 +35,8 @@ public class Customer : Entity
         Name = name;
         PrimaryEmail = primaryEmail;
         SecondaryEmail = secondaryEmail;
-        EmailingSettings = new EmailSettings(industry, true);
-        Status = CustomerStatus.Regular;
+        EmailingSettings = new EmailSettings(industry, false);
+        Type = CustomerType.Regular;
     }
 
     public virtual void DisableEmailing()
@@ -51,7 +51,7 @@ public class Customer : Entity
 
     public virtual bool CanBePromoted()
     {
-        return Status != CustomerStatus.Gold;
+        return Type != CustomerType.Gold;
     }
 
     public virtual void Promote()
@@ -59,11 +59,11 @@ public class Customer : Entity
         if (!CanBePromoted())
             throw new InvalidOperationException();
 
-        Status = Status switch
+        Type = Type switch
         {
-            CustomerStatus.Regular => CustomerStatus.Preferred,
-            CustomerStatus.Preferred => CustomerStatus.Gold,
-            CustomerStatus.Gold => throw new InvalidOperationException(),
+            CustomerType.Regular => CustomerType.Preferred,
+            CustomerType.Preferred => CustomerType.Gold,
+            CustomerType.Gold => throw new InvalidOperationException(),
             _ => throw new InvalidOperationException()
         };
     }

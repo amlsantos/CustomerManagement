@@ -8,6 +8,7 @@ public class Email : ValueObject<Email>
 {
     public string Value { get; }
     private Email(string value) => Value = value;
+    
     public static Result<Email> Create(Maybe<string> value)
     {
         if (value.HasNoValue)

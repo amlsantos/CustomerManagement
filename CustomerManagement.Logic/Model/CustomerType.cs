@@ -1,6 +1,6 @@
 ﻿namespace CustomerManagement.Logic.Model;
 
-public enum CustomerStatus
+public enum CustomerType
 {
     Regular = 1,
     Preferred = 2,

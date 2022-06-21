@@ -23,7 +23,7 @@ namespace CustomerManagement.Api.Migrations
                     EmailingSettings_Industry_Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EmailingSettings_Industry_Id = table.Column<long>(type: "bigint", nullable: false),
                     EmailingSettings_Id = table.Column<long>(type: "bigint", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false)
+                    Type = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

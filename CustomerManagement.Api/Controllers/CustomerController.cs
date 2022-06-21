@@ -39,13 +39,9 @@ public class CustomerController : BaseController
         if (industryOrNothing.IsFailure)
             return Error($"Industry name is invalid: {model.Industry}");
 
-        var customer = new Customer(
-            customerName.Value, 
-            primaryEmail.Value, 
-            Email.Create(model.SecondaryEmail).Value, 
-            industryOrNothing.Value);
+        var customer = new Customer(customerName.Value, primaryEmail.Value, secondaryEmailResult.Value, industryOrNothing.Value);
         
-        await _customerRepository.AdAsync(customer);
+        await _customerRepository.AddAsync(customer);
         await _customerRepository.CommitAsync();
         
         var dto = new
@@ -60,7 +56,7 @@ public class CustomerController : BaseController
                 IsDisabled = customer.EmailingSettings.IsDisabled,
                 Industry = customer.EmailingSettings.Industry
             },
-            Status = customer.Status
+            Status = customer.Type
         };
 
         return Ok(dto);
@@ -99,7 +95,7 @@ public class CustomerController : BaseController
                 IsDisabled = customer.EmailingSettings.IsDisabled,
                 Industry = customer.EmailingSettings.Industry
             },
-            Status = customer.Status
+            Status = customer.Type
         };
             
         return await Success(dto);
@@ -132,7 +128,7 @@ public class CustomerController : BaseController
                 IsDisabled = customer.EmailingSettings.IsDisabled,
                 Industry = customer.EmailingSettings.Industry
             },
-            Status = customer.Status
+            Status = customer.Type
         };
         
         return await Success(dto);
@@ -160,7 +156,7 @@ public class CustomerController : BaseController
                 IsDisabled = customer.EmailingSettings.IsDisabled,
                 Industry = customer.EmailingSettings.Industry
             },
-            Status = customer.Status
+            Status = customer.Type
         };
         
         return await Success(dto);
@@ -180,10 +176,24 @@ public class CustomerController : BaseController
         var customer = customerOrNothing.Value;
         customer.Promote();
         
-        var emailSent = _emailGateway.SendPromotionNotification(customer.PrimaryEmail, customer.Status);
+        var emailSent = _emailGateway.SendPromotionNotification(customer.PrimaryEmail, customer.Type);
         if (emailSent.IsFailure)
             return Error("Unable to sent notification email");
     
-        return await Success(customerOrNothing.Value);
+        var dto = new
+        {
+            Id = customer.Id,
+            Name = customer.PrimaryEmail.Value,
+            PrimaryEmail = customer.PrimaryEmail.Value,
+            SecondaryEmail = customer.SecondaryEmail.Value.Value,
+            Settings = new
+            {
+                IsDisabled = customer.EmailingSettings.IsDisabled,
+                Industry = customer.EmailingSettings.Industry
+            },
+            Status = customer.Type
+        };
+        
+        return await Success(dto);
     }
 }

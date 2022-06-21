@@ -5,9 +5,9 @@ namespace CustomerManagement.Logic.Model;
 
 public class EmailGateway : IEmailGateway
 {
-    public Result SendPromotionNotification(string email, CustomerStatus newStatus)
+    public Result SendPromotionNotification(string email, CustomerType newType)
     {
-        return TrySendEmail(email, "Congratulations!", "You've been promoted to " + newStatus);
+        return TrySendEmail(email, "Congratulations!", "You've been promoted to " + newType);
     }
 
     private Result TrySendEmail(string to, string subject, string body)

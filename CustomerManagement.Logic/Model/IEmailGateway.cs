@@ -4,5 +4,5 @@ namespace CustomerManagement.Logic.Model;
 
 public interface IEmailGateway
 {
-    Result SendPromotionNotification(string email, CustomerStatus newStatus);
+    Result SendPromotionNotification(string email, CustomerType newType);
 }

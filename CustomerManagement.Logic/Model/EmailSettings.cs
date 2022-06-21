@@ -7,7 +7,7 @@ public class EmailSettings : Entity
 {
     public virtual bool IsDisabled { get; protected set; }
     public virtual Industry Industry { get; protected set; }
-    public virtual EmailCampaign EmailCampaign => GetEmailCampaign(Industry);
+    public virtual EmailType EmailType => GetEmailCampaign(Industry);
 
     private EmailSettings() { }
     public EmailSettings(Industry industry, bool isDisabled) : this()
@@ -16,26 +16,26 @@ public class EmailSettings : Entity
         IsDisabled = isDisabled;
     }
 
-    private EmailCampaign GetEmailCampaign(Industry industry)
+    private EmailType GetEmailCampaign(Industry industry)
     {
         if (IsDisabled)
-            return EmailCampaign.None;
+            return EmailType.None;
         
         if (industry == Industry.Cars)
-            return EmailCampaign.LatestCarModels;
+            return EmailType.LatestCarModels;
 
         if (industry == Industry.Pharmacy)
-            return EmailCampaign.PharmacyNews;
+            return EmailType.PharmacyNews;
 
         if (industry == Industry.Other)
-            return EmailCampaign.Generic;
+            return EmailType.Generic;
 
         throw new InvalidEnumArgumentException();
     }
     
     public virtual void DisableEmailing()
     {
-        IsDisabled = false;
+        IsDisabled = true;
     }
 
     public virtual void UpdateIndustry(Industry industry)

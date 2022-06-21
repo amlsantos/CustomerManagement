@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CustomerManagement.Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220620183554_v1")]
+    [Migration("20220620192026_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -44,7 +44,7 @@ namespace CustomerManagement.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

@@ -21,7 +21,7 @@ public class CustomerRepository : IRepository<Customer>
         return new Maybe<Customer>(value);
     }
 
-    public async Task AdAsync(Customer entity)
+    public async Task AddAsync(Customer entity)
     {
         await _context.Customers.AddAsync(entity);
     }
