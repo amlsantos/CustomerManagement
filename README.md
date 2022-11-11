@@ -1,3 +1,6 @@
+![build](https://github.com/santos-an/CustomerManagement/actions/workflows/build.yml/badge.svg)
+![test](https://github.com/santos-an/CustomerManagement/actions/workflows/test.yml/badge.svg)
+
 # Applying Functional Principles in C# - Customer Management App
 A sample application for [Applying Functional Principles in C# 6](https://www.pluralsight.com/courses/csharp-applying-functional-principles) using Microsoft .NET 6. 
 The same course is available [here](https://github.com/vkhorikov/FuntionalPrinciplesCsharp). 
